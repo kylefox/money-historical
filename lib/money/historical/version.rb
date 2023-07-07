@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Money
+class Money
   module Historical
     VERSION = "0.1.0"
   end
