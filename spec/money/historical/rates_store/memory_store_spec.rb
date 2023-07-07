@@ -134,7 +134,9 @@ RSpec.describe Money::Historical::RatesStore::MemoryStore do
 
       context "rate doesn't exist" do
         let(:to) { "BTC" }
-        it { is_expected.to be_nil }
+        it "raises an error" do
+          expect { subject }.to raise_error(Money::Historical::RatesStore::MissingRateError, "store has no rate for BTC")
+        end
       end
     end
 

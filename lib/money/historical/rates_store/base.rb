@@ -1,6 +1,8 @@
 class Money
   module Historical
     module RatesStore
+      class MissingRateError < StandardError; end
+
       class Base
         attr_reader :base_currency
 
@@ -17,16 +19,19 @@ class Money
 
           rates = get_rates(date: date)
 
+          from = get_rate_or_error(rates, iso_from)
+          to = get_rate_or_error(rates, iso_to)
+
           if iso_from == base_currency  # ex: USD → CAD
-            rates[iso_to.iso_code].to_f
+            to
           elsif iso_to == base_currency # ex: CAD → USD
-            1.0 / rates[iso_from.iso_code].to_f
+            1.0 / from
           else
             # CAD → EUR
             # Find the CAD to USD rate ["CAD"] → 1.32
             # Find the EUR to USD rate ["EUR"] → 0.9198
             # 100 CAD → 69.47 EUR
-            rates[iso_to.iso_code].to_f / rates[iso_from.iso_code].to_f
+            to / from
           end
         end
 
@@ -43,6 +48,18 @@ class Money
 
           date = today if date.nil?
           date.strftime("%Y-%m-%d")
+        end
+
+        def get_rate_or_error(rates, currency)
+          return 1.0 if currency == base_currency
+
+          rate = rates[currency.iso_code]
+
+          if rate.nil?
+            raise MissingRateError, "store has no rate for #{currency.iso_code}"
+          else
+            rate.to_f
+          end
         end
       end
     end
